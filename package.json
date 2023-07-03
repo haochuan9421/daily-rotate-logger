@@ -1,0 +1,26 @@
+{
+  "name": "daily-rotate-logger",
+  "version": "1.0.0",
+  "description": "A simple Node.js logger base on Console, log to file and rotate daily",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc"
+  },
+  "files": [
+    "./dist"
+  ],
+  "keywords": [
+    "logger",
+    "rotate"
+  ],
+  "author": "haochuan9421",
+  "homepage": "https://github.com/haochuan9421/daily-rotate-logger",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@types/node": "^20.3.3"
+  }
+}

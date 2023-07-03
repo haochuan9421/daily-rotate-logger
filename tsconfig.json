@@ -1,0 +1,13 @@
+{
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "ESNext",
+    "module": "ESNext",
+    // 设置为 nodenext 是为了强制带 ".js" 后缀，这也是 Node.js 对加载 ES Modules 的强制要求
+    "moduleResolution": "nodenext",
+    "declaration": true,
+    "strict": true,
+    "removeComments": true
+  }
+}
