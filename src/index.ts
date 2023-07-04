@@ -3,7 +3,12 @@ import { Writable } from "node:stream";
 import { mkdirSync, existsSync, statSync, createWriteStream } from "node:fs";
 import { resolve, join } from "node:path";
 
-export type LoggerConstructorOptions = { logDir?: string };
+export type LoggerConstructorOptions = {
+  logDir?: string;
+  addPidToFilename?: boolean;
+  enableStdio?: boolean;
+  enableTimestamp?: boolean;
+};
 
 export class Logger extends Console {
   private options: Required<LoggerConstructorOptions>;
@@ -13,7 +18,7 @@ export class Logger extends Console {
   private errDate?: string;
   private errFile?: Writable;
 
-  constructor(options: LoggerConstructorOptions, consoleOptions: ConsoleConstructorOptions) {
+  constructor(options?: LoggerConstructorOptions, consoleOptions?: ConsoleConstructorOptions) {
     super({
       ...consoleOptions,
       stdout: new Writable({
@@ -24,7 +29,17 @@ export class Logger extends Console {
             this.outDate = curDate;
             this.renewOutFile();
           }
-          this.outFile!.write(Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]), callback);
+          const message = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]) : Buffer.from(chunk, encoding);
+          if (this.options.enableStdio) {
+            process.stdout.write(message, (err) => {
+              if (err) {
+                return callback(err);
+              }
+              this.outFile!.write(message, callback);
+            });
+          } else {
+            this.outFile!.write(message, callback);
+          }
         },
       }),
       stderr: new Writable({
@@ -35,23 +50,36 @@ export class Logger extends Console {
             this.errDate = curDate;
             this.renewErrFile();
           }
-          this.errFile!.write(Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]), callback);
+          const message = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]) : Buffer.from(chunk, encoding);
+          if (this.options.enableStdio) {
+            process.stderr.write(message, (err) => {
+              if (err) {
+                return callback(err);
+              }
+              this.errFile!.write(message, callback);
+            });
+          } else {
+            this.errFile!.write(message, callback);
+          }
         },
       }),
     });
 
     this.options = {
-      logDir: resolve(options.logDir ?? "log"),
+      logDir: resolve(options?.logDir ?? "log"),
+      addPidToFilename: options?.addPidToFilename ?? false,
+      enableStdio: options?.enableStdio ?? false,
+      enableTimestamp: options?.enableTimestamp ?? true,
     };
     if (!existsSync(this.options.logDir) || !statSync(this.options.logDir).isDirectory()) {
       mkdirSync(this.options.logDir, { recursive: true });
     }
   }
   private renewOutFile() {
-    this.outFile = createWriteStream(join(this.options.logDir, `${this.outDate}.out.log`), { flags: "a" });
+    this.outFile = createWriteStream(join(this.options.logDir, `${this.outDate}${this.options.addPidToFilename ? "." + process.pid : ""}.out.log`), { flags: "a" });
   }
   private renewErrFile() {
-    this.errFile = createWriteStream(join(this.options.logDir, `${this.errDate}.err.log`), { flags: "a" });
+    this.errFile = createWriteStream(join(this.options.logDir, `${this.errDate}${this.options.addPidToFilename ? "." + process.pid : ""}.err.log`), { flags: "a" });
   }
   private curDate() {
     const time = new Date();
