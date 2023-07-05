@@ -10,6 +10,10 @@ export type LoggerConstructorOptions = {
   enableTimestamp?: boolean;
 };
 
+const lf = Buffer.from([10]);
+const crlf = Buffer.from([13, 10]);
+const space = Buffer.from([32]);
+
 export class Logger extends Console {
   private options: Required<LoggerConstructorOptions>;
 
@@ -29,16 +33,17 @@ export class Logger extends Console {
             this.outDate = curDate;
             this.renewOutFile();
           }
-          const message = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]) : Buffer.from(chunk, encoding);
+          const raw = Buffer.from(chunk, encoding);
+          const msg = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), raw.indexOf(lf) !== -1 ? lf : raw.indexOf(crlf) !== -1 ? crlf : space, raw]) : raw;
           if (this.options.enableStdio) {
-            process.stdout.write(message, (err) => {
+            process.stdout.write(msg, (err) => {
               if (err) {
                 return callback(err);
               }
-              this.outFile!.write(message, callback);
+              this.outFile!.write(msg, callback);
             });
           } else {
-            this.outFile!.write(message, callback);
+            this.outFile!.write(msg, callback);
           }
         },
       }),
@@ -50,16 +55,17 @@ export class Logger extends Console {
             this.errDate = curDate;
             this.renewErrFile();
           }
-          const message = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), Buffer.from([0x20]), Buffer.from(chunk, encoding)]) : Buffer.from(chunk, encoding);
+          const raw = Buffer.from(chunk, encoding);
+          const msg = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), raw.indexOf(lf) !== -1 ? lf : raw.indexOf(crlf) !== -1 ? crlf : space, raw]) : raw;
           if (this.options.enableStdio) {
-            process.stderr.write(message, (err) => {
+            process.stderr.write(msg, (err) => {
               if (err) {
                 return callback(err);
               }
-              this.errFile!.write(message, callback);
+              this.errFile!.write(msg, callback);
             });
           } else {
-            this.errFile!.write(message, callback);
+            this.errFile!.write(msg, callback);
           }
         },
       }),
