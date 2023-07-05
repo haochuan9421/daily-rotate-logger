@@ -1,6 +1,6 @@
 {
   "name": "daily-rotate-logger",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A simple Node.js logger base on Console, log to file and rotate daily",
   "type": "module",
   "main": "./dist/index.js",

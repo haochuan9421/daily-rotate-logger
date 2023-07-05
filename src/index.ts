@@ -34,7 +34,18 @@ export class Logger extends Console {
             this.renewOutFile();
           }
           const raw = Buffer.from(chunk, encoding);
-          const msg = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), raw.indexOf(lf) !== -1 ? lf : raw.indexOf(crlf) !== -1 ? crlf : space, raw]) : raw;
+          const msg = this.options.enableTimestamp
+            ? (() => {
+                let sep = space;
+                for (let i = 0; i < raw.length - 1; i++) {
+                  if (raw[i] === 10) {
+                    sep = raw[i - 1] === 13 ? crlf : lf;
+                    break;
+                  }
+                }
+                return Buffer.concat([Buffer.from(this.curTime(), "ascii"), sep, raw]);
+              })()
+            : raw;
           if (this.options.enableStdio) {
             process.stdout.write(msg, (err) => {
               if (err) {
@@ -56,7 +67,18 @@ export class Logger extends Console {
             this.renewErrFile();
           }
           const raw = Buffer.from(chunk, encoding);
-          const msg = this.options.enableTimestamp ? Buffer.concat([Buffer.from(this.curTime(), "ascii"), raw.indexOf(lf) !== -1 ? lf : raw.indexOf(crlf) !== -1 ? crlf : space, raw]) : raw;
+          const msg = this.options.enableTimestamp
+            ? (() => {
+                let sep = space;
+                for (let i = 0; i < raw.length - 1; i++) {
+                  if (raw[i] === 10) {
+                    sep = raw[i - 1] === 13 ? crlf : lf;
+                    break;
+                  }
+                }
+                return Buffer.concat([Buffer.from(this.curTime(), "ascii"), sep, raw]);
+              })()
+            : raw;
           if (this.options.enableStdio) {
             process.stderr.write(msg, (err) => {
               if (err) {
